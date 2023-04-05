@@ -5,4 +5,5 @@ package dev.ruffrick.jda.commands.annotations
 annotation class Command(
     val name: String = "",
     val description: String = "",
+    val autocomplete: Boolean = false,
 )

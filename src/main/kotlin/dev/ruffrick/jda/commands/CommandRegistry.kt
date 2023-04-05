@@ -56,7 +56,7 @@ class CommandRegistry(
 
             for (function in command::class.memberFunctions) {
                 function.findAnnotation<Command>()?.let {
-                    val options = parseOptions(function)
+                    val options = parseOptions(function, commandAnnotation.autocomplete)
                     commandData.addOptions(options)
                     commandFunctions[commandName] = function to options.map { it.name }
                 } ?: function.findAnnotation<Subcommand>()?.let { subcommand ->
@@ -116,7 +116,7 @@ class CommandRegistry(
         }
     }
 
-    private fun parseOptions(function: KFunction<*>): List<OptionData> {
+    private fun parseOptions(function: KFunction<*>, autocomplete: Boolean = false): List<OptionData> {
         val options = mutableListOf<OptionData>()
         var allowNonOptions = true
         for (i in 1 until function.parameters.size) {
@@ -139,7 +139,8 @@ class CommandRegistry(
                             OptionType.STRING,
                             name,
                             option.description.ifEmpty { name },
-                            !parameter.type.isMarkedNullable
+                            !parameter.type.isMarkedNullable,
+                            autocomplete
                         ).addChoices(type.java.enumConstants.map { Choice(it.toString(), (it as Enum<*>).name) })
                     )
                 } else {
@@ -147,7 +148,7 @@ class CommandRegistry(
                     ?: throw IllegalArgumentException("Mapper<?, ${type.simpleName}> not found")
                     options.add(
                         OptionData(
-                            optionType, name, option.description.ifEmpty { name }, !parameter.type.isMarkedNullable
+                            optionType, name, option.description.ifEmpty { name }, !parameter.type.isMarkedNullable, autocomplete
                         )
                     )
                 }
